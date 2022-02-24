@@ -33,7 +33,7 @@ def load_data():
     """
     images = []
     labels = []
-    size = 64,64
+    size = (64,64)
     print("LOADING DATA FROM : ",end = "")
     for folder in os.listdir(train_dir):
         print(folder, end = ' | ')
@@ -84,5 +84,28 @@ model.compile(optimizer = 'adam', loss = keras.losses.categorical_crossentropy, 
 print("Modele Créer")
 model.summary()
     
+
 model.fit(X_train, Y_train, batch_size = 64, epochs = 5, validation_split = 0.1)
-model.save("model_ASL.h5")
+acc = np.array(model.model['accuracy'])
+val_acc = np.array(model.model['val_accuracy'])
+loss = np.array(model.model['loss'])
+val_loss = np.array(model.model['val_loss'])
+
+epochs = np.arange(len(acc))
+
+plt.plot(epochs, acc, 'r', label='Training accuracy')
+plt.plot(epochs, val_acc, 'b', label='Validation accuracy')
+plt.scatter(epochs[val_acc.argmax()], val_acc.max(), color='green', s=70)
+plt.title('Training and validation accuracy')
+plt.legend()
+plt.figure()
+
+plt.plot(epochs, loss, 'r', label='Training Loss')
+plt.plot(epochs, val_loss, 'b', label='Validation Loss')
+plt.scatter(epochs[val_loss.argmin()], val_loss.min(), color='green', s=70)
+plt.title('Training and validation loss')
+plt.legend()
+
+plt.show()
+
+#model.save("model_ASL.h5")
