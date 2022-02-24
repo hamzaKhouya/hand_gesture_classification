@@ -1,40 +1,41 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Feb 22 13:26:39 2022
+Created on Tue Feb 10 13:26:39 2022
 
-@author: hamza KH
+@author: Abdessalam Kabouri
 """
 
+""" Importer les bibliotheques necessaires """
 import numpy as np
-import pandas as pd
 import os
-#import keras
 from keras.layers import Conv2D, MaxPool2D, Flatten, Dense, Dropout, BatchNormalization
-from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras import regularizers
 from sklearn.model_selection import train_test_split
 import cv2
-import matplotlib.pyplot as plt
-import seaborn as sns
 from tensorflow import keras
-#print(os.listdir("../input"))
-train_dir = '/home/pc/Documents/hand_gesture_cnn/Data/train_data'
-test_dir = '/home/pc/Documents/hand_gesture_cnn/Data/test_train'
-labels_dict = {'A':0,'B':1,'C':2,'D':3,'E':4,'F':5,'G':6,'H':7,'I':8,'J':9,'K':10,'L':11,'M':12,
-                   'N':13,'O':14,'P':15,'Q':16,'R':17,'S':18,'T':19,'U':20,'V':21,'W':22,'X':23,'Y':24,
-                   'Z':25,'space':26,'del':27,'nothing':28}
-#labels_dict = {'A':0,'B':1,'C':2}
 
-def load_data():
+""" Le dossiers contenant le dataset """
+train_dir = '../Data/train_data'
+test_dir = '../Data/test_train'
+
+""" Les differentes classes des donnees """
+labels_dict = {'A':0,'B':1,'C':2,'D':3,'E':4,'F':5,'G':6,'H':7,'I':8,'J':9,
+               'K':10,'L':11,'M':12,'N':13,'O':14,'P':15,'Q':16,'R':17,'S':18,
+               'T':19,'U':20,'V':21,'W':22,'X':23,'Y':24,'Z':25,'space':26,
+               'del':27,'nothing':28}
+
+
+def charger_donnees():
     """
-    Loads data and preprocess. Returns train and test data along with labels.
+    Charge les données et le prétraitement. Renvoie les données d'entraînement 
+    et de test avec les étiquettes.
     """
     images = []
     labels = []
     size = (64,64)
-    print("LOADING DATA FROM : ",end = "")
+    print("Charger les images de la classe : ",end = "")
     for folder in os.listdir(train_dir):
         print(folder, end = ' | ')
         for image in os.listdir(train_dir + "/" + folder):
@@ -48,19 +49,25 @@ def load_data():
     
     labels = keras.utils.to_categorical(labels,29)
     
+    """ Splitter les donnees en donnees de tests et donnees d'apprentissage """
     X_train, X_test, Y_train, Y_test = train_test_split(images, labels, test_size = 0.05)
     
-    print()
-    print('Charger', len(X_train),'images pour training,','la taille de données de Train  =',X_train.shape)
-    print('Charger', len(X_test),'images pour testing','la taille de données de Test =',X_test.shape)
+    print('Charger', len(X_train),'images pour training,',
+          'la taille de données de Train  =',X_train.shape)
+    print('Charger', len(X_test),'images pour testing',
+          'la taille de données de Test =', X_test.shape)
     
     return X_train, X_test, Y_train, Y_test
-X_train, X_test, Y_train, Y_test = load_data()
+
+""""  Appel de la fonction du chargement des donnees """
+X_train, X_test, Y_train, Y_test = charger_donnees()
 
     
+""" Creation du modele CNN """
 model = Sequential()
     
-model.add(Conv2D(16, kernel_size = [3,3], padding = 'same', activation = 'relu', input_shape = (64,64,3)))
+model.add(Conv2D(16, kernel_size = [3,3], padding = 'same', activation = 'relu', 
+                 input_shape = (64,64,3)))
 model.add(Conv2D(32, kernel_size = [3,3], padding = 'same', activation = 'relu'))
 model.add(MaxPool2D(pool_size = [3,3]))
     
@@ -79,33 +86,15 @@ model.add(Dropout(0.5))
 model.add(Dense(512, activation = 'relu', kernel_regularizer = regularizers.l2(0.001)))
 model.add(Dense(29, activation = 'softmax'))
     
-model.compile(optimizer = 'adam', loss = keras.losses.categorical_crossentropy, metrics = ["accuracy"])
+model.compile(optimizer = 'adam', loss = keras.losses.categorical_crossentropy,
+              metrics = ["accuracy"])
     
 print("Modele Créer")
+""" Affichier la description et les parametres du modele """
 model.summary()
     
-
+""" Entrainer le modele avec les donnees genererees """
 model.fit(X_train, Y_train, batch_size = 64, epochs = 5, validation_split = 0.1)
-acc = np.array(model.model['accuracy'])
-val_acc = np.array(model.model['val_accuracy'])
-loss = np.array(model.model['loss'])
-val_loss = np.array(model.model['val_loss'])
 
-epochs = np.arange(len(acc))
-
-plt.plot(epochs, acc, 'r', label='Training accuracy')
-plt.plot(epochs, val_acc, 'b', label='Validation accuracy')
-plt.scatter(epochs[val_acc.argmax()], val_acc.max(), color='green', s=70)
-plt.title('Training and validation accuracy')
-plt.legend()
-plt.figure()
-
-plt.plot(epochs, loss, 'r', label='Training Loss')
-plt.plot(epochs, val_loss, 'b', label='Validation Loss')
-plt.scatter(epochs[val_loss.argmin()], val_loss.min(), color='green', s=70)
-plt.title('Training and validation loss')
-plt.legend()
-
-plt.show()
-
-#model.save("model_ASL.h5")
+""" Sauvegarde du modele pour l'utiliser dans le script de test """
+model.save("model_ASL.h5")
